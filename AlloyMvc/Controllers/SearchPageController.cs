@@ -24,7 +24,9 @@ namespace AlloyMvc.Controllers
             var findClient = client.UnifiedSearch(ContentLanguage.PreferredCulture.GetLanguage())
                 .For(q)
                 .WithAndAsDefaultOperator()
+                .UsingUnifiedWeights()
                 .Include(x => x.SearchTitle.AnyWordBeginsWith(q), 2)
+                .BoostMatching(x => x.MatchType(typeof(ProductPage)), 4)
                 .GetResult(
                 new HitSpecification
                 {
