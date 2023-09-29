@@ -2,6 +2,7 @@ using AlloyMvc.Models.Find;
 using AlloyMvc.Models.Pages;
 using AlloyMvc.Models.ViewModels;
 using EPiServer.Find;
+using EPiServer.Find.Api;
 using EPiServer.Find.Framework;
 using EPiServer.Find.UnifiedSearch;
 using EPiServer.Globalization;
@@ -19,14 +20,27 @@ namespace AlloyMvc.Controllers
         }
         public ViewResult Index(SearchPage currentPage, string q)
         {
-            //client.Conventions.UnifiedSearchRegistry.Add<ICustomUnifiedSearchContent>().ProjectTitleFrom(x => x.SearchTitle);
+            if (string.IsNullOrWhiteSpace(q))
+            {
+                return View(new SearchContentModel(currentPage)
+                {
+                    Hits = new List<SearchContentModel.SearchHit>(),
+                    NumberOfHits = 0,
+                    SearchServiceDisabled = false,
+                    SearchedQuery = ""
+                });
+            }
 
             var findClient = client.UnifiedSearch(ContentLanguage.PreferredCulture.GetLanguage())
                 .For(q)
                 .WithAndAsDefaultOperator()
                 .UsingUnifiedWeights()
-                .Include(x => x.SearchTitle.AnyWordBeginsWith(q), 2)
+                .UsingSynonyms()
+                .ApplyBestBets()
+                .Include(x => x.SearchTitle.AnyWordBeginsWith(q))
                 .BoostMatching(x => x.MatchType(typeof(ProductPage)), 4)
+                .Filter(x => x.MatchTypeHierarchy(typeof(PageData)))
+                .Filter(x => !((ProductPage)x).IsDiscontinued.Match(true))
                 .GetResult(
                 new HitSpecification
                 {

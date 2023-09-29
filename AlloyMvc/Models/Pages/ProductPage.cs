@@ -16,6 +16,12 @@ namespace AlloyMvc.Models.Pages
         IncludeOn = new[] { typeof(StartPage) })]
     public class ProductPage : StandardPage, IHasRelatedContent
     {
+        [Display(
+            Name = "Is Discontinued?",
+            Order = 300
+            )]
+        public virtual bool IsDiscontinued { get; set; }
+
         [Required]
         [Display(Order = 305)]
         [UIHint(Globals.SiteUIHints.StringsCollection)]
